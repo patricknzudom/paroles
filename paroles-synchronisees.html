@@ -1,0 +1,724 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="light dark" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Paroles" />
+<meta name="theme-color" content="#000000" />
+<link rel="icon" href="data:," />
+<title>Paroles synchronisées</title>
+<style>
+  :root{
+    --bg:#f4f3ef; --surface:#ffffff; --surface-2:#eceae3; --ink:#191a1e; --ink-soft:#55565e; --ink-faint:#8b8c94;
+    --line:#ddd9cf; --accent:#c2410c; --accent-ink:#fff; --accent-soft:#fdeadd; --ok:#177245; --ok-soft:#e2f2e8;
+    --err:#b3261e; --err-soft:#fbe7e5; --shadow:0 1px 2px rgba(20,18,12,.06),0 8px 24px rgba(20,18,12,.06);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#101014; --surface:#1a1a21; --surface-2:#23232c; --ink:#f2f1ec; --ink-soft:#b9b8b2; --ink-faint:#7d7c86; --line:#2e2e38; --accent:#f59e0b; --accent-ink:#1a1206; --accent-soft:#2e2110; --ok:#4cc38a; --ok-soft:#12291d; --err:#ff8a80; --err-soft:#331714; --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35); }
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:ui-sans-system,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;line-height:1.45}
+  main{max-width:720px;margin:0 auto;padding:20px 16px 64px}
+  button,input{font:inherit}
+  button{font-weight:600;cursor:pointer;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;padding:8px 14px;min-height:2.5rem}
+  button.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+  button:disabled{opacity:.45;cursor:default}
+  button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  input[type="text"]{width:100%;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-height:2.5rem}
+  label{display:block;font-weight:600;font-size:.9rem;margin:0 0 6px}
+  h1{font-size:1.55rem;line-height:1.15;letter-spacing:-.02em;margin:6px 0 4px;font-weight:800}
+  h2{font-size:1.12rem;letter-spacing:-.01em;margin:0 0 8px;font-weight:750}
+  h3{font-size:1rem;margin:0 0 6px;font-weight:700}
+  p{margin:0 0 10px}
+  .lede{color:var(--ink-soft);margin-bottom:18px}
+  .small{font-size:.88rem;color:var(--ink-soft)}
+  .tiny{font-size:.8rem;color:var(--ink-faint)}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:16px;box-shadow:var(--shadow)}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media(max-width:560px){.grid2{grid-template-columns:1fr}}
+  .field{margin-bottom:12px}
+  .notice{border-radius:12px;padding:12px 14px;margin-bottom:16px;font-size:.95rem;border:1px solid var(--line);background:var(--surface)}
+  .notice.ok{background:var(--ok-soft);border-color:transparent}
+  .notice.err{background:var(--err-soft);border-color:transparent}
+  .notice strong{display:block;margin-bottom:2px}
+  [hidden]{display:none !important}
+  .paste-field{font-size:1.08rem;padding:15px 14px;min-height:3.5rem;border-radius:12px;border:2px solid var(--accent);background:var(--surface)}
+  .paste-field::placeholder{color:var(--ink-faint)}
+  .resume-entry{display:flex;align-items:center;gap:12px;width:100%;text-align:left;border-radius:14px;padding:12px 16px;margin-bottom:16px}
+  .resume-entry .resume-ico{display:inline-flex;align-items:center;justify-content:center;width:2.4rem;height:2.4rem;border-radius:999px;background:var(--accent);color:var(--accent-ink);font-size:1rem;flex:0 0 auto}
+  .resume-entry strong{display:block;font-size:1rem}
+  .resume-entry #resume-label{color:var(--ink-soft);font-size:.88rem;font-weight:500}
+  .results{list-style:none;margin:12px 0 0;padding:0}
+  .results li{border-top:1px solid var(--line)}
+  .results button{width:100%;text-align:left;border:none;background:transparent;border-radius:0;padding:12px 4px;display:flex;justify-content:space-between;gap:12px;align-items:baseline;font-weight:500;min-height:3rem}
+  .results .meta{color:var(--ink-faint);font-size:.85rem;white-space:nowrap}
+  .badge{display:inline-block;font-size:.72rem;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--accent-soft);color:var(--accent);margin-left:8px;white-space:nowrap}
+  .badge.plain{background:var(--surface-2);color:var(--ink-soft)}
+  details.recipe{border:1px solid var(--line);border-radius:14px;background:var(--surface);box-shadow:var(--shadow)}
+  details.recipe summary{padding:14px 16px;cursor:pointer;font-weight:750;list-style:none;min-height:3rem;display:flex;align-items:center}
+  details.recipe summary::-webkit-details-marker{display:none}
+  details.recipe .body{padding:0 16px 16px}
+  details.recipe ol{margin:8px 0 10px;padding-left:1.3rem}
+  details.recipe li{margin-bottom:8px}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.86em;background:var(--surface-2);padding:1px 6px;border-radius:6px;overflow-wrap:anywhere}
+  footer{margin-top:28px}
+
+  /* ===== KARAOKE PLEIN ÉCRAN ===== */
+  #karaoke{
+    position:fixed; inset:0; z-index:100;
+    background:#08080c; color:#f5f4ef;
+    display:flex; flex-direction:column;
+    height:100%; height:100dvh; overflow:hidden;
+    --kc1:#4a2c10; --kc2:#16283a; --kc3:#0b0b10;
+  }
+  #karaoke[hidden]{display:none !important}
+  .k-bg{position:absolute; inset:0; z-index:0; overflow:hidden; background:#060608}
+  .k-bg-art{position:absolute; inset:-6%; background-size:cover; background-position:center; filter:blur(60px) saturate(1.3) brightness(.55); transform:scale(1.15); opacity:1}
+  .k-bg-grad{position:absolute; inset:-8%;
+    background:
+      radial-gradient(115% 85% at 12% 8%, var(--kc1) 0%, rgba(0,0,0,0) 62%),
+      radial-gradient(120% 100% at 88% 88%, var(--kc2) 0%, rgba(0,0,0,0) 58%),
+      linear-gradient(165deg, var(--kc3) 0%, #060608 78%);
+    animation:kDrift 16s ease-in-out infinite alternate;
+    transition:opacity .6s ease;
+  }
+  .k-bg.has-art .k-bg-grad{opacity:0}
+  .k-bg-shade{position:absolute; inset:0; background:linear-gradient(180deg, rgba(0,0,0,.36), rgba(0,0,0,.18) 38%, rgba(0,0,0,.52)); animation:kBreathe 7s ease-in-out infinite}
+  @keyframes kDrift{from{transform:scale(1.04) translate(0,0)}to{transform:scale(1.13) translate(-1.6%,1.8%)}}
+  @keyframes kBreathe{0%,100%{opacity:.82}50%{opacity:1}}
+  .k-bg.pulse{animation:kPulse .85s ease-out}
+  @keyframes kPulse{0%{filter:brightness(1)}28%{filter:brightness(1.5) saturate(1.25)}100%{filter:brightness(1)}}
+  .k-bg.pulse .k-bg-art{animation:kArtPulse .85s ease-out}
+  @keyframes kArtPulse{0%{transform:scale(1.12)}30%{transform:scale(1.2)}100%{transform:scale(1.12)}}
+  @media (prefers-reduced-motion: reduce){
+    .k-bg-grad,.k-bg-shade{animation:none}
+    .k-bg.pulse,.k-bg.pulse .k-bg-art{animation:none}
+  }
+  .k-head{
+    position:relative; z-index:1;
+    flex:0 0 auto; text-align:center; padding:18px 20px 6px;
+    pointer-events:none;
+  }
+  .k-title{font-size:1rem;font-weight:700;letter-spacing:.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .k-artist{font-size:.85rem;color:rgba(245,244,239,.55);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+  .k-lyrics{
+    position:relative; z-index:1;
+    flex:1 1 auto; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch;
+    padding:38vh 20px 42vh; scroll-behavior:smooth; text-align:center;
+    max-width:900px; width:100%; margin:0 auto;
+  }
+  @media (prefers-reduced-motion: reduce){ .k-lyrics{scroll-behavior:auto} }
+  .k-lyrics p{
+    position:relative;
+    margin:0; padding:10px 8px; font-size:clamp(1.55rem,5.2vw,2.6rem); line-height:1.3; font-weight:600;
+    color:rgba(245,244,239,.32); cursor:pointer; transition:color .25s ease, opacity .25s ease; border-radius:12px;
+    -webkit-tap-highlight-color:transparent; touch-action:pan-y;
+  }
+  .k-lyrics p.has-time{padding-left:54px;padding-right:54px}
+  .k-lyrics .line-time{
+    position:absolute; left:4px; top:50%; transform:translateY(-50%);
+    font-size:.8rem; font-weight:600; letter-spacing:.02em;
+    font-variant-numeric:tabular-nums; white-space:nowrap;
+    color:rgba(245,244,239,.48); pointer-events:none;
+  }
+  .k-lyrics p.active .line-time{color:rgba(255,214,150,.85)}
+  .k-lyrics p.past{color:rgba(245,244,239,.45)}
+  .k-lyrics p.active{color:#ffb03a; font-weight:800; text-shadow:0 0 26px rgba(255,176,58,.38); animation:kLineIn .45s ease-out}
+  @keyframes kLineIn{from{transform:scale(.965)}to{transform:scale(1)}}
+  @media (prefers-reduced-motion: reduce){ .k-lyrics p.active{animation:none} }
+  .k-lyrics p.plain-line{cursor:default;color:rgba(245,244,239,.75);font-weight:500;font-size:clamp(1.2rem,4vw,1.8rem)}
+  .k-lyrics .empty{color:rgba(245,244,239,.5);font-size:1.1rem;cursor:default}
+  .k-bar{
+    position:relative; z-index:1;
+    flex:0 0 auto;
+    display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap;
+    padding:12px 14px calc(12px + env(safe-area-inset-bottom));
+    background:rgba(10,10,14,.72); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+    border-top:1px solid rgba(255,255,255,.08);
+  }
+  .k-bar button, .k-bar a{
+    background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.14); color:#f5f4ef;
+    border-radius:999px; padding:8px 14px; min-height:2.6rem; font-size:.95rem;
+    display:inline-flex; align-items:center; justify-content:center; text-decoration:none;
+  }
+  .k-bar button.primary{background:#f59e0b;border-color:#f59e0b;color:#1a1206;min-width:3.2rem}
+  .k-bar button.k-close{margin-left:6px}
+  .k-clock{font-variant-numeric:tabular-nums;font-weight:700;font-size:1rem;min-width:5.5ch;text-align:center;color:rgba(245,244,239,.9)}
+  .k-offset{font-variant-numeric:tabular-nums;font-size:.85rem;color:rgba(245,244,239,.55);min-width:9ch;text-align:center}
+  .k-bar a.k-next-btn{background:#f59e0b;border-color:#f59e0b;color:#1a1206;font-weight:800}
+  .k-sync-chip{
+    position:absolute; left:50%; transform:translateX(-50%); z-index:2;
+    bottom:calc(88px + env(safe-area-inset-bottom));
+    background:rgba(18,18,26,.85); color:#f5f4ef; border:1px solid rgba(255,255,255,.22);
+    border-radius:999px; padding:9px 16px; min-height:2.6rem; font-size:.88rem; font-weight:700;
+    backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+    box-shadow:0 6px 20px rgba(0,0,0,.4); white-space:nowrap;
+  }
+  .k-end{padding:38px 8px 8px;text-align:center}
+  .k-next-big{display:inline-block;text-decoration:none;background:#f59e0b;border:1px solid #f59e0b;color:#1a1206;font-size:1.2rem;font-weight:800;border-radius:999px;padding:16px 38px;min-height:3.8rem;box-shadow:0 10px 30px rgba(0,0,0,.45)}
+  .k-end-hint{margin-top:10px;font-size:.85rem;color:rgba(245,244,239,.5)}
+</style>
+</head>
+<body>
+
+<main id="home">
+  <h1>Paroles synchronisées</h1>
+  <p class="lede">Lance ton Raccourci « Paroles » pendant qu'une chanson joue dans Apple Music, puis colle ici — les paroles s'ouvrent en karaoké plein écran.</p>
+
+  <button type="button" id="resume-karaoke" class="resume-entry" hidden>
+    <span class="resume-ico" aria-hidden="true">▶</span>
+    <span><strong>Retour au karaoké</strong><span id="resume-label"></span></span>
+  </button>
+
+  <div class="card">
+    <h2>Depuis Apple Music</h2>
+    <p>Le raccourci copie la chanson en cours et ouvre cette page. Colle-la ici et le karaoké part tout seul.</p>
+    <label for="paste-field">Colle la chanson ici</label>
+    <input type="text" id="paste-field" class="paste-field" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Touche ici, puis « Coller »" aria-describedby="paste-hint paste-status" />
+    <p class="small" id="paste-hint" style="margin:8px 0 0">Touche le champ, puis « Coller » — les paroles partent toutes seules.</p>
+    <p class="small" id="paste-status" role="status" style="margin:8px 0 0"></p>
+  </div>
+
+  <div class="notice err" id="home-error" hidden></div>
+  <div class="notice ok" id="home-notice" hidden></div>
+
+  <div class="card">
+    <h2>Chercher une chanson</h2>
+    <p class="small" style="margin-bottom:12px">Si le collage ne donne rien, cherche directement ici — le karaoké s'ouvrira sur le résultat choisi.</p>
+    <form id="search-form">
+      <div class="grid2">
+        <div class="field">
+          <label for="q-title">Titre</label>
+          <input type="text" id="q-title" autocomplete="off" placeholder="Ex. : Bohemian Rhapsody" />
+        </div>
+        <div class="field">
+          <label for="q-artist">Artiste</label>
+          <input type="text" id="q-artist" autocomplete="off" placeholder="Ex. : Queen" />
+        </div>
+      </div>
+      <div class="row">
+        <button type="submit" class="primary" id="search-btn">Chercher les paroles</button>
+        <span class="small" id="search-status" role="status"></span>
+      </div>
+    </form>
+    <ul class="results" id="search-results"></ul>
+  </div>
+
+  <details class="recipe">
+    <summary>Le Raccourci iOS — la recette (via le presse-papiers)</summary>
+    <div class="body">
+      <p>Le raccourci passe par le <strong>presse-papiers</strong> : il copie la chanson en cours dans Apple Music, puis ouvre cette page. Une fois la page ouverte, tu touches le champ <strong>« Colle la chanson ici »</strong>, puis <strong>« Coller »</strong> — la page cherche les paroles toute seule et ouvre le karaoké plein écran, minuteur à 0.</p>
+      <h3>Créer le raccourci (une seule fois)</h3>
+      <ol>
+        <li>Ouvre <strong>Raccourcis</strong>, touche <strong>+</strong> et nomme-le « Paroles ».</li>
+        <li>Ajoute l'action <strong>« Obtenir la chanson actuelle »</strong> (en espagnol : <em>Obtener → Canción actual</em>).</li>
+        <li>Ajoute l'action <strong>« Texte »</strong> (<em>Texto</em>) et mets-y <strong>uniquement</strong> les trois variables, séparées par « | » : <strong>Titre</strong>, puis <code> | </code>, puis <strong>Artiste</strong>, puis <code> | </code>, puis <strong>Álbum</strong>. Le texte contient trois pastilles bleues et rien d'autre : <code>Titre | Artiste | Álbum</code>.</li>
+        <li>Ajoute l'action <strong>« Copier dans le presse-papiers »</strong> (<em>Copiar al portapapeles</em>) avec le Texte comme entrée.</li>
+        <li>Ajoute l'action <strong>« Ouvrir les URL »</strong> (<em>Abrir URL</em>) avec <strong>l'adresse de cette page, telle quelle</strong> — sans aucun paramètre ajouté.</li>
+        <li>Rends-le rapide à lancer : écran d'accueil, bouton Action, double tap au dos, ou « Dis Siri, Paroles ».</li>
+        <li><strong>Sur la page :</strong> touche le champ <strong>« Colle la chanson ici »</strong>, puis <strong>« Coller »</strong>. Le karaoké plein écran s'ouvre tout seul.</li>
+      </ol>
+      <p><strong>Le piège à éviter :</strong> insère les vraies variables (les pastilles bleues réglées sur Titre, Artiste, Álbum). Ne tape pas « [Titre] » à la main.</p>
+      <p><strong>Première fois :</strong> iOS peut demander « Autoriser le collage » — accepte. Dans le karaoké, recale avec −0,5 s / +0,5 s si la chanson était déjà avancée.</p>
+      <p><strong>Reprendre au bon temps :</strong> si tu fermes le karaoké (✕) ou quittes la page, la chanson en cours continue en arrière-plan. La page mémorise la chanson et sa position <strong>sur cet appareil seulement</strong> — rien n'est envoyé nulle part — et en revenant, le karaoké rouvre exactement au bon temps.</p>
+    </div>
+  </details>
+
+  <footer>
+    <p class="tiny">Paroles fournies par <a href="https://lrclib.net" target="_blank" rel="noopener">LRCLIB</a>. La chanson en cours est mémorisée sur cet appareil seulement, pour reprendre au bon temps si tu quittes la page.</p>
+  </footer>
+</main>
+
+<!-- ===== VUE KARAOKE PLEIN ÉCRAN ===== -->
+<section id="karaoke" hidden aria-label="Karaoké">
+  <div class="k-bg" id="k-bg" aria-hidden="true">
+    <div class="k-bg-art" id="k-bg-art"></div>
+    <div class="k-bg-grad"></div>
+    <div class="k-bg-shade"></div>
+  </div>
+  <div class="k-head">
+    <div class="k-title" id="k-title"></div>
+    <div class="k-artist" id="k-artist"></div>
+  </div>
+  <div class="k-lyrics" id="k-lyrics"></div>
+  <button type="button" id="k-sync-chip" class="k-sync-chip" hidden>↓ Ligne en cours</button>
+  <div class="k-bar">
+    <button type="button" class="primary" id="k-playpause" aria-label="Pause ou reprise du minuteur">⏸</button>
+    <button type="button" id="k-restart" aria-label="Repartir à zéro">↺ 0</button>
+    <span class="k-clock" id="k-clock">0:00</span>
+    <button type="button" id="k-minus" aria-label="Retarder les paroles de 0,5 seconde">−0,5 s</button>
+    <button type="button" id="k-plus" aria-label="Avancer les paroles de 0,5 seconde">+0,5 s</button>
+    <span class="k-offset" id="k-offset">0,0 s</span>
+    <a href="shortcuts://run-shortcut?name=Paroles" target="_top" id="k-next" class="k-next-btn" aria-label="Chanson suivante — relancer le raccourci Paroles">Next ⏭</a>
+    <button type="button" class="k-close" id="k-close" aria-label="Quitter le karaoké">✕</button>
+  </div>
+</section>
+
+<script>
+(function(){
+  "use strict";
+  function $(id){ return document.getElementById(id); }
+  function fmtTime(s){ if(!isFinite(s)||s<0)s=0; var m=Math.floor(s/60), sec=Math.floor(s%60); return m+":"+(sec<10?"0":"")+sec; }
+  function fmtOffset(s){ var v=Math.round(s*10)/10; return (v>0?"+":"")+String(v.toFixed(1)).replace(".",",")+" s"; }
+  var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  function parseLRC(text){
+    var lines=[], tag=/\[(\d{1,2}):(\d{2})(?:[.:](\d{1,3}))?\]/g, m, line, rest;
+    var raw=String(text||"").split(/\r?\n/);
+    for(var i=0;i<raw.length;i++){
+      line=raw[i]; tag.lastIndex=0; var times=[];
+      while((m=tag.exec(line))!==null){ var frac=m[3]?parseFloat("0."+m[3]):0; times.push(parseInt(m[1],10)*60+parseInt(m[2],10)+frac); }
+      if(!times.length) continue;
+      rest=line.replace(/\[\d{1,2}:\d{2}(?:[.:]\d{1,3})?\]/g,"").trim();
+      for(var j=0;j<times.length;j++) lines.push({time:times[j], text:rest});
+    }
+    lines.sort(function(a,b){return a.time-b.time;});
+    return lines;
+  }
+  function activeIndex(lines,t){ var idx=-1; for(var i=0;i<lines.length;i++){ if(lines[i].time<=t) idx=i; else break; } return idx; }
+  var SHORTCUT_URL="shortcuts://run-shortcut?name=Paroles";
+  function appendEndNext(container){
+    var wrap=document.createElement("div"); wrap.className="k-end";
+    /* Vrai lien target=_top : c'est ce tap-là qu'iOS honore pour ouvrir un schéma d'app
+       depuis une page en cadre (la navigation JS du cadre est bloquée par Safari). */
+    var b=document.createElement("a"); b.className="k-next-big"; b.textContent="Next ⏭";
+    b.setAttribute("href", SHORTCUT_URL); b.setAttribute("target","_top");
+    b.setAttribute("aria-label","Chanson suivante — relancer le raccourci Paroles");
+    wrap.appendChild(b);
+    var hint=document.createElement("div"); hint.className="k-end-hint"; hint.textContent="Fin des paroles — touche Next pour la chanson suivante";
+    wrap.appendChild(hint);
+    container.appendChild(wrap);
+  }
+  function renderLyrics(container, lines, plainText){
+    container.innerHTML="";
+    if(lines && lines.length){
+      lines.forEach(function(l,i){
+        var p=document.createElement("p"); p.className="has-time"; p.dataset.idx=i;
+        var ts=document.createElement("span"); ts.className="line-time"; ts.setAttribute("aria-hidden","true"); ts.textContent=fmtTime(l.time);
+        p.appendChild(ts);
+        p.appendChild(document.createTextNode(l.text||"♪"));
+        p.addEventListener("click", function(){ seekLine(i); });
+        container.appendChild(p);
+      });
+      appendEndNext(container);
+    } else if(plainText){
+      String(plainText).split(/\r?\n/).forEach(function(t){ var p=document.createElement("p"); p.className="plain-line"; p.textContent=t||" "; container.appendChild(p); });
+      appendEndNext(container);
+    } else {
+      var e=document.createElement("p"); e.className="empty"; e.textContent="Aucune parole pour cette chanson."; container.appendChild(e);
+    }
+  }
+
+  var LRCLIB="https://lrclib.net/api";
+  function apiGet(artist,title,album){
+    var q="track_name="+encodeURIComponent(title)+"&artist_name="+encodeURIComponent(artist||"");
+    if(album) q+="&album_name="+encodeURIComponent(album);
+    return fetch(LRCLIB+"/get?"+q).then(function(r){ if(!r.ok) throw new Error("notfound"); return r.json(); });
+  }
+  function apiSearch(artist,title){
+    var q="track_name="+encodeURIComponent(title);
+    if(artist) q+="&artist_name="+encodeURIComponent(artist);
+    return fetch(LRCLIB+"/search?"+q).then(function(r){ if(!r.ok) throw new Error("search"); return r.json(); });
+  }
+  function bestSynced(results){ for(var i=0;i<results.length;i++) if(results[i].syncedLyrics) return results[i]; return results.length?results[0]:null; }
+
+  /* ===== État karaoké / minuteur ===== */
+  var song={ title:"", artist:"", album:"", duration:0, lines:[], plainText:"", offset:0, playing:false, base:0, startedAt:0, hlLast:-2 };
+  var lyricsEl=$("k-lyrics"), clockEl=$("k-clock");
+
+  function manualNow(){ var t=song.base; if(song.playing) t+=(performance.now()-song.startedAt)/1000; return Math.max(0,t); }
+  function play(){ if(song.playing) return; song.startedAt=performance.now(); song.playing=true; $("k-playpause").textContent="⏸"; saveSession(); }
+  function pause(){ if(!song.playing) return; song.base=manualNow(); song.playing=false; $("k-playpause").textContent="▶"; saveSession(); }
+  function seek(sec){ song.base=Math.max(0,sec); if(song.playing) song.startedAt=performance.now(); song.hlLast=-2; tick(); saveSession(); }
+  var lastLineTap={idx:-1, at:0};
+  function seekLine(i){
+    if(!song.lines.length||!song.lines[i]) return;
+    lastLineTap={idx:i, at:performance.now()};
+    /* Toucher une ligne = repartir en synchro depuis cette ligne-là. */
+    followSync=true; updateSyncChip();
+    seek(song.lines[i].time - song.offset);
+  }
+  var bgEl=$("k-bg");
+  function pulseBg(){
+    if(reduceMotion||!bgEl) return;
+    bgEl.classList.remove("pulse");
+    void bgEl.offsetWidth;
+    bgEl.classList.add("pulse");
+  }
+  if(bgEl) bgEl.addEventListener("animationend", function(ev){ if(ev.animationName==="kPulse") bgEl.classList.remove("pulse"); });
+  /* ===== Défilement libre : synchro seulement quand la ligne en cours est regardée =====
+     followSync = vrai tant que la ligne active est dans (ou près de) la zone visible.
+     Dès que l'utilisateur défile assez loin pour la perdre de vue, on arrête de recentrer ;
+     quand il revient la voir, la synchro reprend toute seule. Un repère flottant
+     « ↓ Ligne en cours » permet de revenir d'un tap. */
+  var followSync=true, programmaticScroll=false, progScrollTimer=null;
+  function scrollToLine(el){
+    if(!el) return;
+    var target=Math.max(0, el.offsetTop - lyricsEl.clientHeight/2 + el.clientHeight/2);
+    programmaticScroll=true;
+    lyricsEl.scrollTo({top:target, behavior: reduceMotion?"auto":"smooth"});
+    if(progScrollTimer) clearTimeout(progScrollTimer);
+    /* Le défilement animé dure ~600 ms : pendant ce temps, les événements scroll
+       sont les nôtres et ne doivent pas déclencher la désynchro. */
+    progScrollTimer=setTimeout(function(){ programmaticScroll=false; }, reduceMotion?80:700);
+  }
+  function activeLineEl(){
+    var idx=song.hlLast;
+    if(idx<0||idx>=song.lines.length) idx=activeIndex(song.lines, manualNow()+song.offset);
+    return (idx>=0 && lyricsEl.children[idx]) ? lyricsEl.children[idx] : null;
+  }
+  function lineNearViewport(el){
+    if(!el) return true;
+    var top=el.offsetTop - lyricsEl.scrollTop;
+    var bottom=top + el.clientHeight;
+    var margin=lyricsEl.clientHeight*0.4;
+    return bottom > -margin && top < lyricsEl.clientHeight + margin;
+  }
+  function updateSyncChip(){
+    var chip=$("k-sync-chip"); if(!chip) return;
+    chip.hidden = followSync || $("karaoke").hidden || !song.lines.length;
+  }
+  function checkSyncFromScroll(){
+    if(programmaticScroll) return;
+    var el=activeLineEl(); if(!el) return;
+    followSync=lineNearViewport(el);
+    updateSyncChip();
+  }
+  lyricsEl.addEventListener("scroll", checkSyncFromScroll, {passive:true});
+  $("k-sync-chip").addEventListener("click", function(){
+    followSync=true; updateSyncChip();
+    scrollToLine(activeLineEl());
+  });
+
+  function highlight(){
+    if(!song.lines.length) return;
+    var t=manualNow()+song.offset;
+    var idx=activeIndex(song.lines,t);
+    if(idx===song.hlLast) return;
+    var prev=lyricsEl.querySelector("p.active");
+    if(prev){ prev.classList.remove("active"); prev.classList.add("past"); }
+    if(idx>=0) pulseBg();
+    song.hlLast=idx;
+    if(idx>=0){
+      var el=lyricsEl.children[idx];
+      if(el){
+        el.classList.add("active");
+        /* On ne recentre que si l'utilisateur regarde encore les paroles en cours. */
+        if(followSync) scrollToLine(el);
+      }
+    }
+    updateSyncChip();
+  }
+  var lastResumeSec=-1;
+  function tick(){
+    if(!$("karaoke").hidden){ clockEl.textContent=fmtTime(manualNow()); highlight(); }
+    else if(song.title){
+      var s=Math.floor(manualNow());
+      if(s!==lastResumeSec){ lastResumeSec=s; updateResumeEntry(); }
+    }
+  }
+  setInterval(tick,120);
+
+  /* Boutons Next (barre du bas + fin des paroles) : de vrais liens <a target="_top">
+     vers le schéma du raccourci — aucun JS, le tap de l'utilisateur fait tout. */
+
+  $("k-playpause").addEventListener("click", function(){ if(song.playing) pause(); else play(); });
+  $("k-restart").addEventListener("click", function(){ seek(0); });
+  $("k-minus").addEventListener("click", function(){ song.offset=Math.round((song.offset-0.5)*10)/10; $("k-offset").textContent=fmtOffset(song.offset); song.hlLast=-2; tick(); saveSession(); });
+  $("k-plus").addEventListener("click", function(){ song.offset=Math.round((song.offset+0.5)*10)/10; $("k-offset").textContent=fmtOffset(song.offset); song.hlLast=-2; tick(); saveSession(); });
+  lyricsEl.addEventListener("click", function(ev){
+    var p=ev.target&&ev.target.closest?ev.target.closest("p[data-idx]"):null;
+    if(!p||!song.lines.length) return;
+    var i=parseInt(p.dataset.idx,10);
+    if(lastLineTap.idx===i && performance.now()-lastLineTap.at<400) return;
+    seekLine(i);
+  });
+
+  function tryFullscreen(){
+    try{
+      var el=$("karaoke");
+      if(el.requestFullscreen){ var pr=el.requestFullscreen(); if(pr && pr.catch) pr.catch(function(){}); }
+    }catch(e){}
+  }
+  function exitFullscreen(){
+    try{ if(document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(function(){}); }catch(e){}
+  }
+
+  function openKaraoke(resume){
+    $("karaoke").hidden=false;
+    document.body.style.overflow="hidden";
+    followSync=true; updateSyncChip();
+    tryFullscreen();
+    if(resume){
+      /* Reprise : le minuteur n'a jamais arrêté — on resynchronise juste l'affichage. */
+      song.hlLast=-2;
+      clockEl.textContent=fmtTime(manualNow());
+      tick();
+    } else {
+      lyricsEl.scrollTop=0;
+      seek(0); play();
+    }
+    updateResumeEntry();
+  }
+  function closeKaraoke(){
+    /* On ne met PAS le minuteur en pause : la chanson continue pendant qu'on est sur l'accueil. */
+    saveSession();
+    $("karaoke").hidden=true;
+    document.body.style.overflow="";
+    exitFullscreen();
+    window.scrollTo(0,0);
+    updateResumeEntry();
+  }
+  $("k-close").addEventListener("click", closeKaraoke);
+  $("resume-karaoke").addEventListener("click", function(){ openKaraoke(true); });
+
+  function updateResumeEntry(){
+    var btn=$("resume-karaoke"); if(!btn) return;
+    var active=!!song.title && (song.lines.length>0 || !!song.plainText);
+    btn.hidden=!active || !$("karaoke").hidden;
+    if(active) $("resume-label").textContent=song.title+(song.artist?" — "+song.artist:"")+" · "+fmtTime(manualNow());
+  }
+  document.addEventListener("fullscreenchange", function(){
+    // Si l'utilisateur sort du plein écran système avec Échap, on reste dans la vue karaoké (elle remplit déjà l'écran).
+  });
+
+  /* ===== Fond karaoké : pochette iTunes + couleurs dominantes ===== */
+  var artToken=0;
+  function hashHue(s){ var h=0; for(var i=0;i<s.length;i++){ h=((h<<5)-h+s.charCodeAt(i))|0; } return Math.abs(h); }
+  function setPalette(cols){
+    var k=$("karaoke"); if(!k||!cols||!cols.length) return;
+    k.style.setProperty("--kc1", cols[0]);
+    k.style.setProperty("--kc2", cols[1]||cols[0]);
+    k.style.setProperty("--kc3", cols[2]||cols[0]);
+  }
+  function fallbackPalette(){
+    var h=hashHue(((song.artist||"")+"|"+(song.title||"")).toLowerCase())%360;
+    return ["hsl("+h+",62%,26%)", "hsl("+((h+48)%360)+",58%,20%)", "hsl("+((h+300)%360)+",50%,12%)"];
+  }
+  function extractColors(img){
+    var S=24, c=document.createElement("canvas"); c.width=S; c.height=S;
+    var ctx=c.getContext("2d"); ctx.drawImage(img,0,0,S,S);
+    var d=ctx.getImageData(0,0,S,S).data;
+    var buckets={}, order=[], i, r, g, b, key, bk;
+    for(i=0;i<d.length;i+=4){
+      if(d[i+3]<200) continue;
+      r=d[i]; g=d[i+1]; b=d[i+2];
+      if(Math.max(r,g,b)<18||Math.min(r,g,b)>242) continue;
+      key=(r>>5)+","+(g>>5)+","+(b>>5);
+      if(!buckets[key]){ buckets[key]={n:0,r:0,g:0,b:0}; order.push(key); }
+      bk=buckets[key]; bk.n++; bk.r+=r; bk.g+=g; bk.b+=b;
+    }
+    var list=order.map(function(k){ var q=buckets[k]; return {n:q.n, r:q.r/q.n, g:q.g/q.n, b:q.b/q.n}; });
+    if(!list.length) return null;
+    list.sort(function(a,b2){ return b2.n-a.n; });
+    function sat(c2){ var mx=Math.max(c2.r,c2.g,c2.b), mn=Math.min(c2.r,c2.g,c2.b); return mx===0?0:(mx-mn)/mx; }
+    var c1=list[0], c2=c1, bestSat=-1, j;
+    for(j=0;j<Math.min(list.length,10);j++){ if(list[j]!==c1 && sat(list[j])>bestSat){ bestSat=sat(list[j]); c2=list[j]; } }
+    var c3=list.length>2?list[2]:c1;
+    function css(c2,f){ return "rgb("+Math.round(c2.r*f)+","+Math.round(c2.g*f)+","+Math.round(c2.b*f)+")"; }
+    return [css(c1,.62), css(c2,.55), css(c3,.34)];
+  }
+  function applySongBackground(){
+    var token=++artToken;
+    var artEl=$("k-bg-art");
+    if(bgEl) bgEl.classList.remove("has-art");
+    if(artEl) artEl.style.backgroundImage="";
+    setPalette(fallbackPalette());
+    if(!song.title) return;
+    var term=(song.artist?song.artist+" ":"")+song.title;
+    fetch("https://itunes.apple.com/search?term="+encodeURIComponent(term)+"&media=music&entity=song&limit=1")
+      .then(function(r){ return r.ok?r.json():null; })
+      .then(function(data){
+        if(token!==artToken||!data||!data.results||!data.results.length) return;
+        var url=data.results[0].artworkUrl100; if(!url) return;
+        url=url.replace("100x100bb.jpg","600x600bb.jpg");
+        var img=new Image(); img.crossOrigin="anonymous";
+        img.onload=function(){
+          if(token!==artToken) return;
+          /* La pochette devient LE fond (floue, plein écran) ; le dégradé de couleurs s'efface. */
+          if(artEl) artEl.style.backgroundImage='url("'+url+'")';
+          if(bgEl) bgEl.classList.add("has-art");
+          try{ var cols=extractColors(img); if(cols&&cols.length) setPalette(cols); }catch(e){}
+        };
+        img.src=url;
+      })
+      .catch(function(){});
+  }
+
+  var userStarted=false;
+  function loadSong(record, resume){
+    if(!resume) userStarted=true;
+    song.title=record.trackName||record.title||"";
+    song.artist=record.artistName||record.artist||"";
+    song.album=record.albumName||record.album||"";
+    song.duration=record.duration||0;
+    song.plainText=record.plainLyrics||"";
+    song.lines=record.syncedLyrics?parseLRC(record.syncedLyrics):[];
+    song.offset=resume?(resume.offset||0):0; $("k-offset").textContent=fmtOffset(song.offset); song.hlLast=-2;
+    $("k-title").textContent=song.title||"Sans titre";
+    $("k-artist").textContent=song.artist+(song.album?" — "+song.album:"")+(song.lines.length?"":" · paroles non synchronisées");
+    renderLyrics(lyricsEl, song.lines, song.plainText);
+    applySongBackground();
+    if(resume){
+      song.playing=false; song.base=Math.max(0,resume.position||0);
+      if(resume.playing){ song.startedAt=performance.now(); song.playing=true; $("k-playpause").textContent="⏸"; }
+      else { $("k-playpause").textContent="▶"; }
+      openKaraoke(true);
+    } else {
+      pause(); song.base=0; $("k-playpause").textContent="▶";
+      openKaraoke(false);
+    }
+    saveSession();
+  }
+
+  /* ===== Accueil : erreurs / notices ===== */
+  function showError(msg){
+    var box=$("home-error"); box.hidden=false; box.innerHTML="";
+    var s=document.createElement("strong"); s.textContent="Ça n'a pas marché"; box.appendChild(s);
+    var sp=document.createElement("span"); sp.textContent=msg; box.appendChild(sp);
+    $("home-notice").hidden=true;
+  }
+  function hideError(){ $("home-error").hidden=true; }
+
+  /* ===== Recherche manuelle ===== */
+  function showResults(results){
+    var ul=$("search-results"); ul.innerHTML="";
+    results.slice(0,8).forEach(function(r){
+      var li=document.createElement("li"); var b=document.createElement("button"); b.type="button";
+      var left=document.createElement("span"); left.textContent=(r.trackName||"")+" — "+(r.artistName||"");
+      var badge=document.createElement("span"); badge.className="badge"+(r.syncedLyrics?"":" plain"); badge.textContent=r.syncedLyrics?"Synchronisées":"Texte seulement";
+      left.appendChild(badge);
+      var meta=document.createElement("span"); meta.className="meta"; meta.textContent=r.duration?fmtTime(r.duration):"";
+      b.appendChild(left); b.appendChild(meta);
+      b.addEventListener("click", function(){ loadSong(r); });
+      li.appendChild(b); ul.appendChild(li);
+    });
+  }
+  function doSearch(artist,title,statusEl){
+    statusEl.textContent="Recherche dans LRCLIB…";
+    return apiSearch(artist,title).then(function(results){
+      statusEl.textContent="";
+      if(!results.length) throw new Error("Aucun résultat dans LRCLIB pour cette chanson.");
+      showResults(results);
+      return bestSynced(results);
+    });
+  }
+  $("search-form").addEventListener("submit", function(ev){
+    ev.preventDefault(); hideError();
+    var title=$("q-title").value.trim(), artist=$("q-artist").value.trim();
+    var status=$("search-status");
+    if(!title){ status.textContent="Entre au moins un titre."; return; }
+    $("search-btn").disabled=true;
+    doSearch(artist,title,status).then(function(best){ if(best) loadSong(best); })
+    .catch(function(e){ status.textContent=(!e.message||/fetch|network/i.test(e.message))?"Recherche impossible — vérifie ta connexion, puis réessaie.":e.message; })
+    .then(function(){ $("search-btn").disabled=false; });
+  });
+
+  /* ===== Réception par collage (Raccourci iOS) ===== */
+  function parseClipboardSong(text){
+    var t=String(text||"").replace(/\s+/g," ").trim();
+    if(!t) return null;
+    function cleanVal(v){ v=String(v||"").trim(); if(/^\[.*\]$/.test(v)) return ""; return v; }
+    if(t.indexOf("|")!==-1){ var parts=t.split("|"); return {title:cleanVal(parts[0]), artist:cleanVal(parts[1]), album:cleanVal(parts[2])}; }
+    var dash=t.split(/\s+[-–—]\s+/);
+    if(dash.length>=2) return {title:cleanVal(dash.slice(1).join(" - ")), artist:cleanVal(dash[0]), album:""};
+    return {title:cleanVal(t), artist:"", album:""};
+  }
+  (function initPaste(){
+    var field=$("paste-field"); if(!field) return;
+    var status=$("paste-status"); var busy=false, inputTimer=null, lastFailed="";
+    function runPastedSong(raw){
+      var text=String(raw||"").trim(); if(!text||busy) return;
+      var parsed=parseClipboardSong(text);
+      if(!parsed||!parsed.title){
+        if(lastFailed===text) return; lastFailed=text;
+        showError("Le texte collé ne contient pas de chanson reconnaissable (format attendu : « Titre | Artiste | Album »). Lance d'abord ton Raccourci « Paroles » pendant qu'une chanson joue, puis colle à nouveau ici. La recherche manuelle est juste en dessous.");
+        return;
+      }
+      busy=true; lastFailed=""; hideError();
+      $("q-title").value=parsed.title; $("q-artist").value=parsed.artist;
+      if(status) status.textContent="« "+parsed.title+" »"+(parsed.artist?" — "+parsed.artist:"")+" : recherche des paroles…";
+      field.value=""; if(document.activeElement===field) field.blur();
+      function done(rec){ loadSong(rec); if(status) status.textContent=""; busy=false; }
+      function fail(msg){ showError(msg); if(status) status.textContent=""; busy=false; }
+      var attempt=(parsed.album||parsed.artist)?apiGet(parsed.artist,parsed.title,parsed.album).catch(function(){return null;}):Promise.resolve(null);
+      attempt.then(function(rec){
+        if(rec&&rec.syncedLyrics){ done(rec); return; }
+        var plainFallback=(rec&&rec.plainLyrics)?rec:null;
+        return doSearch(parsed.artist,parsed.title,$("search-status")).then(function(best){
+          if(best){ done(best); return; }
+          if(plainFallback){ done(plainFallback); return; }
+          fail("LRCLIB n'a rien retourné pour « "+parsed.title+" ». La recherche est déjà remplie ci-dessous : corrige le titre ou l'artiste et relance.");
+        });
+      }).catch(function(){ fail("LRCLIB n'a pas trouvé « "+parsed.title+" »"+(parsed.artist?" de "+parsed.artist:"")+". La recherche est déjà remplie ci-dessous : corrige le titre ou l'artiste et relance."); });
+    }
+    field.addEventListener("paste", function(ev){
+      var text="";
+      try{ var cd=ev.clipboardData||window.clipboardData; if(cd) text=cd.getData("text")||cd.getData("text/plain")||""; }catch(e){}
+      if(text){ ev.preventDefault(); if(inputTimer){clearTimeout(inputTimer); inputTimer=null;} runPastedSong(text); }
+    });
+    field.addEventListener("input", function(){
+      var value=field.value; if(!value||!value.trim()) return;
+      if(inputTimer) clearTimeout(inputTimer);
+      inputTimer=setTimeout(function(){ inputTimer=null; if(field.value===value) runPastedSong(value); },450);
+    });
+  })();
+
+  /* ===== Persistance de la session — sur l'appareil seulement, rien n'est envoyé ===== */
+  var LS_KEY="paroles-session-v1";
+  function saveSession(){
+    try{
+      if(!song.title) return;
+      var rec={
+        title:song.title, artist:song.artist, album:song.album, duration:song.duration||0,
+        basePositionSeconds:Math.round(manualNow()*10)/10,
+        baseTimestampEpochMs:Date.now(),
+        playing:!!song.playing,
+        offsetSeconds:song.offset
+      };
+      window.localStorage.setItem(LS_KEY, JSON.stringify(rec));
+    }catch(e){}
+  }
+  function clearSession(){ try{ window.localStorage.removeItem(LS_KEY); }catch(e){} }
+  function readSession(){
+    try{
+      var raw=window.localStorage.getItem(LS_KEY);
+      return raw?JSON.parse(raw):null;
+    }catch(e){ return null; }
+  }
+  window.addEventListener("pagehide", function(){ saveSession(); });
+
+  /* Au chargement : si une chanson était en cours, on la recharge et on reprend au bon temps. */
+  (function restoreSession(){
+    var rec=readSession();
+    if(!rec||!rec.title) return;
+    var pos=rec.basePositionSeconds||0;
+    if(rec.playing&&rec.baseTimestampEpochMs) pos+=(Date.now()-rec.baseTimestampEpochMs)/1000;
+    pos=Math.max(0,pos);
+    if(rec.duration&&pos>rec.duration+30){ clearSession(); return; }
+    apiGet(rec.artist||"", rec.title, rec.album||"").catch(function(){ return null; })
+      .then(function(r){
+        if(r&&r.syncedLyrics) return r;
+        return apiSearch(rec.artist||"", rec.title).then(function(results){ return bestSynced(results)||r; }).catch(function(){ return r; });
+      })
+      .then(function(found){
+        if(userStarted) return;
+        if(!found||(!found.syncedLyrics&&!found.plainLyrics)) return;
+        var lines=found.syncedLyrics?parseLRC(found.syncedLyrics):[];
+        var dur=found.duration||rec.duration||0;
+        var limit=dur>0?dur+30:(lines.length?lines[lines.length-1].time+60:Infinity);
+        if(pos>limit){ clearSession(); return; }
+        loadSong(found, {position:pos, playing:!!rec.playing, offset:rec.offsetSeconds||0});
+      })
+      .catch(function(){});
+  })();
+})();
+</script>
+</body>
+</html>
